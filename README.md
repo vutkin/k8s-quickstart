@@ -6,7 +6,7 @@ https://kubernetes.io/blog/2019/03/15/kubernetes-setup-using-ansible-and-vagrant
 ```bash
 mkdir certs
 
-openssl req -nodes -newkey rsa:2048 -keyout certs/dashboard.key -out certs/dashboard.csr -subj "/C=/ST=/L=/O=/OU=/CN=kubernetes-dashboard"
+openssl req -nodes -newkey rsa:2048 -keyout certs/dashboard.key -out certs/dashboard.csr -subj "/CN=kubernetes-dashboard"
 openssl x509 -req -sha256 -days 365 -in certs/dashboard.csr -signkey certs/dashboard.key -out certs/dashboard.crt
 
 kubectl create ns kubernetes-dashboard
@@ -20,7 +20,7 @@ kubectl -n kubernetes-dashboard patch svc kubernetes-dashboard --type='json' -p 
 kubectl get svc kubernetes-dashboard -n kubernetes-dashboard -o=jsonpath='{.spec.ports[0].nodePort}{"\n"}'
 ```
 
-```yaml
+```bash
 cat <<EOF | kubectl create -f -
 apiVersion: v1
 kind: ServiceAccount
@@ -43,8 +43,7 @@ subjects:
   name: admin-user
   namespace: kube-system
 EOF
-```
-```bash
+
 kubectl -n kube-system describe secret $(kubectl -n kube-system get secret | grep admin-user | awk '{print $1}')
 ```
 
