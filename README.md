@@ -1,6 +1,7 @@
 https://kubernetes.io/blog/2019/03/15/kubernetes-setup-using-ansible-and-vagrant/
 
-### Certs
+### Dashboard
+#### Certs for dashboard
 
 ```bash
 mkdir certs
@@ -12,7 +13,7 @@ kubectl create ns kubernetes-dashboard
 kubectl create secret generic kubernetes-dashboard-certs --from-file=certs -n kubernetes-dashboard
 ```
 
-### Dashboard
+#### Deploy dashboard
 ```bash
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.0.0-beta4/aio/deploy/recommended.yaml
 kubectl -n kubernetes-dashboard patch svc kubernetes-dashboard --type='json' -p '[{"op":"replace","path":"/spec/type","value":"NodePort"}]'
@@ -89,15 +90,16 @@ EOF
 #### flannel network
 https://github.com/coreos/flannel/issues/871
 
-#### Ingress controllers
+### Ingress controllers
 ```bash
 kubectl apply -f https://raw.githubusercontent.com/haproxytech/kubernetes-ingress/master/deploy/haproxy-ingress.yaml
 ```
 
-#### Assign to master node
+### Assign to master node
+```yaml
 nodeSelector:
   node-role.kubernetes.io/master: ""
-
+```
 ### Controlling your cluster from machines other than the control-plane node
 ```bash
 scp root@<master ip>:/etc/kubernetes/admin.conf .
