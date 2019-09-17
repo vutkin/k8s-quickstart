@@ -1,0 +1,53 @@
+---
+- hosts: all
+  become: true
+  vars:
+    cni_plugin: calico
+    pod_network_cidr: >
+      {{ (cni_plugin == 'flannel' or cni_plugin == 'canal') | ternary('10.244.0.0/16', '192.168.0.0/16') }}
+  tasks:
+  - import_tasks: tasks/install_docker.yml
+  - import_tasks: tasks/disable_swap.yml
+  - import_tasks: tasks/install_k8s.yml
+
+  - name: Initialize the Kubernetes cluster using kubeadm
+    command: >-
+      kubeadm init --apiserver-advertise-address="192.168.50.10"
+      --apiserver-cert-extra-sans="192.168.50.10" --node-name k8s-master
+      --pod-network-cidr={{ pod_network_cidr }}
+
+  - name: Setup kubeconfig for vagrant user
+    command: "{{ item }}"
+    with_items:
+    - mkdir -p /home/vagrant/.kube
+    - cp -i /etc/kubernetes/admin.conf /home/vagrant/.kube/config
+    - chown vagrant:vagrant /home/vagrant/.kube/config
+
+  - name: Install calico pod network
+    become: false
+    command: >
+      kubectl apply -f https://docs.projectcalico.org/v3.8/manifests/calico.yaml
+    when: cni_plugin == 'calico'
+
+  - name: Install flannel pod network
+    become: false
+    command: >
+      kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/62e44c867a2846fefb68bd5f178daf4da3095ccb/Documentation/kube-flannel.yml
+    when: cni_plugin == 'flannel'
+
+  - name: Install canal pod network
+    become: false
+    command: >
+      kubectl apply -f https://docs.projectcalico.org/v3.8/manifests/canal.yaml
+    when: cni_plugin == 'canal'
+
+  - name: Generate join command
+    command: kubeadm token create --print-join-command
+    register: join_command
+
+  - name: Copy join command to local file
+    local_action: copy content="{{ join_command.stdout_lines[0] }}" dest="/vagrant/join-command"
+
+  handlers:
+  - name: docker status
+    service: name=docker state=started

@@ -1,0 +1,16 @@
+- hosts: all
+  become: true
+  tasks:
+  - import_tasks: tasks/install_docker.yml
+  - import_tasks: tasks/disable_swap.yml
+  - import_tasks: tasks/install_k8s.yml
+
+  - name: Copy the join command to server location
+    copy: src=/vagrant/join-command dest=/tmp/join-command.sh mode=0777
+
+  - name: Join the node to cluster
+    command: sh /tmp/join-command.sh
+
+  handlers:
+  - name: docker status
+    service: name=docker state=started
