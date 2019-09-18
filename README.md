@@ -86,8 +86,40 @@ EOF
 ```
 
 ### Issues
-#### flannel network
-https://github.com/coreos/flannel/issues/871
+#### Flannel minutiae
+The VMs in my initial setup had the first NIC connected to the VirtualBox NAT network, and the second NIC connected to a host-only network. This resulted in the pod IPs being inaccessible across nodes — because flannel used the first NIC by default and in my case it was a NAT interface on which the machines could not cross-talk, only reach the web. Thus the pod network did not really work across nodes. An easy way to find out which NIC flannel uses is to look at flannel’s logs:
+
+```yaml
+$ kubectl get pod --all-namespaces | grep flannel
+kube-system   kube-flannel-ds-j587n          1/1       Running    2          3h
+kube-system   kube-flannel-ds-p6sm7          1/1       Running   1          3h
+kube-system   kube-flannel-ds-xn27c          1/1       Running   1          3h
+$ kubectl logs  -f kube-flannel-ds-j587n -n kube-system
+I0622 14:17:37.841808       1 main.go:487] Using interface with name enp0s3 and address 10.0.2.2
+```
+
+In the above case you can see that the flannel pod is listening on the NAT interface and this would not work. The way I fixed it was by:
+1. Deleting the flannel daemon set:
+```bash
+kubectl delete ds -l app=flannel -n kube-system
+```
+1. Removing the flannel.1 virtual NIC on each node.
+```bash
+ip link delete flannel.1
+```
+1. Recreating the flannel daemonset with a tweak in the flannel configmap. Open the `flannel-<...>.yaml` file and append the following tokens to the command directive for thekube-flannel container: `--iface` and `eth1` (or whatever is the name of the NIC connected to the host-only network).
+```yaml
+args:
+  - --ip-masq
+  - --kube-subnet-mgr
+  - --iface
+  - eth1
+```
+1. Finally restarting kubelet and docker on all nodes:
+```bash
+systemctl stop kubelet && systemctl restart docker && systemctl start kubelet
+```
+[soultion was found in reference article](https://medium.com/@ErrInDam/taming-kubernetes-for-fun-and-profit-60a1d7b353de)
 
 ### Ingress controllers
 ```bash
