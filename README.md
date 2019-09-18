@@ -100,25 +100,25 @@ I0622 14:17:37.841808       1 main.go:487] Using interface with name enp0s3 and 
 
 In the above case you can see that the flannel pod is listening on the NAT interface and this would not work. The way I fixed it was by:
 1. Deleting the flannel daemon set:
-```bash
-kubectl delete ds -l app=flannel -n kube-system
-```
+    ```bash
+    kubectl delete ds -l app=flannel -n kube-system
+    ```
 1. Removing the flannel.1 virtual NIC on each node.
-```bash
-ip link delete flannel.1
-```
+    ```bash
+    ip link delete flannel.1
+    ```
 1. Recreating the flannel daemonset with a tweak in the flannel configmap. Open the `flannel-<...>.yaml` file and append the following tokens to the command directive for thekube-flannel container: `--iface` and `eth1` (or whatever is the name of the NIC connected to the host-only network).
-```yaml
-args:
-  - --ip-masq
-  - --kube-subnet-mgr
-  - --iface
-  - eth1
-```
+    ```yaml
+    args:
+      - --ip-masq
+      - --kube-subnet-mgr
+      - --iface
+      - eth1
+    ```
 1. Finally restarting kubelet and docker on all nodes:
-```bash
-systemctl stop kubelet && systemctl restart docker && systemctl start kubelet
-```
+    ```bash
+    systemctl stop kubelet && systemctl restart docker && systemctl start kubelet
+    ```
 [soultion was found in reference article](https://medium.com/@ErrInDam/taming-kubernetes-for-fun-and-profit-60a1d7b353de)
 
 ### Ingress controllers
