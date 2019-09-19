@@ -1,6 +1,11 @@
 IMAGE_NAME = "bento/ubuntu-18.04"
 N = 1
 
+$kubeadmConfigCopy = <<-SCRIPT
+    echo "copy /etc/kubernetes/admin.conf"
+    cp /etc/kubernetes/admin.conf /vagrant
+SCRIPT
+
 Vagrant.configure("2") do |config|
     config.ssh.insert_key = false
 
@@ -18,6 +23,7 @@ Vagrant.configure("2") do |config|
                 node_ip: "192.168.50.10",
             }
         end
+        master.vm.provision "shell", inline: $kubeadmConfigCopy
     end
 
     (1..N).each do |i|
