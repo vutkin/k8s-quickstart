@@ -16,9 +16,9 @@
     update_cache: yes
   vars:
     packages:
-      - kubelet
-      - kubeadm
-      - kubectl
+      - kubelet{{ (k8s_version != 'latest') | ternary('=' ~ k8s_version ~ '*', '') }}
+      - kubeadm{{ (k8s_version != 'latest') | ternary('=' ~ k8s_version ~ '*', '') }}
+      - kubectl{{ (k8s_version != 'latest') | ternary('=' ~ k8s_version ~ '*', '') }}
 
 - name: Configure node ip
   lineinfile:

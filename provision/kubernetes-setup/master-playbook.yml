@@ -5,6 +5,8 @@
     cni_plugin: calico
     pod_network_cidr: >
       {{ (cni_plugin == 'flannel' or cni_plugin == 'canal') | ternary('10.244.0.0/16', '192.168.0.0/16') }}
+    docker_version: latest
+    k8s_version: latest
   tasks:
   - import_tasks: tasks/install_docker.yml
   - import_tasks: tasks/disable_swap.yml

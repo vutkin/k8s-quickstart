@@ -1,9 +1,17 @@
 IMAGE_NAME = "bento/ubuntu-18.04"
 N = 1
+CNI_PLUGIN = "flannel"
+DOCKER_VERSION = "5:18.09"
+K8S_VERSION = "1.15"
 
 $kubeadmConfigCopy = <<-SCRIPT
     echo "copy /etc/kubernetes/admin.conf"
     cp /etc/kubernetes/admin.conf /vagrant
+SCRIPT
+
+$k8sAutocomplete = <<-SCRIPT
+    sudo apt-get install bash-completion
+    echo 'source <(kubectl completion bash)' >>~/.bashrc
 SCRIPT
 
 Vagrant.configure("2") do |config|
@@ -18,12 +26,17 @@ Vagrant.configure("2") do |config|
         master.vm.network "private_network", ip: "192.168.50.10"
         master.vm.hostname = "k8s-master"
         master.vm.provision "ansible_local" do |ansible|
-            ansible.playbook = "provision/kubernetes-setup/master-playbook.yml"
-            ansible.extra_vars = {
+            ansible.playbook    = "provision/kubernetes-setup/master-playbook.yml"
+            ansible.verbose     = "-vvv"
+            ansible.extra_vars  = {
                 node_ip: "192.168.50.10",
+                cni_plugin: CNI_PLUGIN,
+                docker_version: DOCKER_VERSION,
+                k8s_version: K8S_VERSION,
             }
         end
         master.vm.provision "shell", inline: $kubeadmConfigCopy
+        master.vm.provision "shell", inline: $k8sAutocomplete
     end
 
     (1..N).each do |i|
@@ -36,9 +49,11 @@ Vagrant.configure("2") do |config|
             node.vm.network "private_network", ip: "192.168.50.#{i + 10}"
             node.vm.hostname = "node-#{i}"
             node.vm.provision "ansible_local" do |ansible|
-                ansible.playbook = "provision/kubernetes-setup/node-playbook.yml"
-                ansible.extra_vars = {
+                ansible.playbook    = "provision/kubernetes-setup/node-playbook.yml"
+                ansible.extra_vars  = {
                     node_ip: "192.168.50.#{i + 10}",
+                    docker_version: DOCKER_VERSION,
+                    k8s_version: K8S_VERSION,
                 }
             end
         end

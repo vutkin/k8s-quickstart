@@ -28,8 +28,8 @@
     update_cache: yes
   vars:
     packages:
-    - docker-ce
-    - docker-ce-cli
+    - docker-ce{{ (docker_version != 'latest') | ternary('=' ~ docker_version ~ '*', '') }}
+    - docker-ce-cli{{ (docker_version != 'latest') | ternary('=' ~ docker_version ~ '*', '') }}
     - containerd.io
   notify:
     - docker status

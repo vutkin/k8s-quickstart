@@ -1,5 +1,8 @@
 - hosts: all
   become: true
+  vars:
+    docker_version: latest
+    k8s_version: latest
   tasks:
   - import_tasks: tasks/install_docker.yml
   - import_tasks: tasks/disable_swap.yml
