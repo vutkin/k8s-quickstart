@@ -26,8 +26,8 @@ Vagrant.configure("2") do |config|
         master.vm.network "private_network", ip: "192.168.50.10"
         master.vm.hostname = "k8s-master"
         master.vm.provision "ansible_local" do |ansible|
+            ansible.playbook_command = "sudo ANSIBLE_FORCE_COLOR=true ansible-playbook"
             ansible.playbook    = "provision/kubernetes-setup/master-playbook.yml"
-            ansible.verbose     = "-vvv"
             ansible.extra_vars  = {
                 node_ip: "192.168.50.10",
                 cni_plugin: CNI_PLUGIN,
@@ -49,6 +49,7 @@ Vagrant.configure("2") do |config|
             node.vm.network "private_network", ip: "192.168.50.#{i + 10}"
             node.vm.hostname = "node-#{i}"
             node.vm.provision "ansible_local" do |ansible|
+                ansible.playbook_command = "sudo ANSIBLE_FORCE_COLOR=true ansible-playbook"
                 ansible.playbook    = "provision/kubernetes-setup/node-playbook.yml"
                 ansible.extra_vars  = {
                     node_ip: "192.168.50.#{i + 10}",
