@@ -1,6 +1,6 @@
 IMAGE_NAME = "bento/ubuntu-18.04"
 N = 1
-CNI_PLUGIN = "calico"
+CNI_PLUGIN = "flannel"
 DOCKER_VERSION = "5:18.09"
 K8S_VERSION = "1.15"
 
