@@ -1,8 +1,9 @@
 IMAGE_NAME = "bento/ubuntu-18.04"
+IMAGE_VERSION = "202012.21.0"
 N = 1
-CNI_PLUGIN = "flannel"
+CNI_PLUGIN = "calico"
 DOCKER_VERSION = "5:18.09"
-K8S_VERSION = "1.15"
+K8S_VERSION = "1.17"
 
 $kubeadmConfigCopy = <<-SCRIPT
     echo "copy /etc/kubernetes/admin.conf"
@@ -11,7 +12,9 @@ SCRIPT
 
 $k8sAutocomplete = <<-SCRIPT
     sudo apt-get install bash-completion
-    echo 'source <(kubectl completion bash)' >>~/.bashrc
+    echo 'source <(kubectl completion bash)' >>/home/vagrant/.bashrc
+    echo 'alias k=kubectl' >>/home/vagrant/.bashrc
+    echo 'complete -F __start_kubectl k' >>/home/vagrant/.bashrc
 SCRIPT
 
 Vagrant.configure("2") do |config|
@@ -23,6 +26,7 @@ Vagrant.configure("2") do |config|
             v.cpus = 2
         end
         master.vm.box = IMAGE_NAME
+        master.vm.box_version = IMAGE_VERSION
         master.vm.network "private_network", ip: "192.168.50.10"
         master.vm.hostname = "k8s-master"
         master.vm.provision "ansible_local" do |ansible|
@@ -46,6 +50,7 @@ Vagrant.configure("2") do |config|
                 v.cpus = 2
             end
             node.vm.box = IMAGE_NAME
+            node.vm.box_version = IMAGE_VERSION
             node.vm.network "private_network", ip: "192.168.50.#{i + 10}"
             node.vm.hostname = "node-#{i}"
             node.vm.provision "ansible_local" do |ansible|

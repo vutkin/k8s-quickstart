@@ -1,5 +1,12 @@
 https://kubernetes.io/blog/2019/03/15/kubernetes-setup-using-ansible-and-vagrant/
 
+### Operations
+#### Vagrant cli
+```
+vagrant up
+vagrant ssh k8s-master
+```
+
 ### Dashboard
 #### Certs for dashboard
 
@@ -15,7 +22,7 @@ kubectl create secret generic kubernetes-dashboard-certs --from-file=certs -n ku
 
 #### Deploy dashboard
 ```bash
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.0.0-beta4/aio/deploy/recommended.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.0.0-rc7/aio/deploy/recommended.yaml
 kubectl -n kubernetes-dashboard patch svc kubernetes-dashboard --type='json' -p '[{"op":"replace","path":"/spec/type","value":"NodePort"}]'
 kubectl get svc kubernetes-dashboard -n kubernetes-dashboard -o=jsonpath='{.spec.ports[0].nodePort}{"\n"}'
 ```
@@ -85,7 +92,7 @@ spec:
 EOF
 ```
 
-### Issues
+### Known issues
 #### Flannel minutiae
 The VMs in my initial setup had the first NIC connected to the VirtualBox NAT network, and the second NIC connected to a host-only network. This resulted in the pod IPs being inaccessible across nodes — because flannel used the first NIC by default and in my case it was a NAT interface on which the machines could not cross-talk, only reach the web. Thus the pod network did not really work across nodes. An easy way to find out which NIC flannel uses is to look at flannel’s logs:
 

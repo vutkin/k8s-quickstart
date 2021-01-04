@@ -3,13 +3,13 @@
   become: true
   vars:
     cni_plugin: calico
-    calico_manifest_uri: https://docs.projectcalico.org/v3.8/manifests/calico.yaml
+    calico_manifest_uri: https://docs.projectcalico.org/v3.17/manifests/calico.yaml
     flannel_manifest_uri: "https://raw.githubusercontent.com/coreos/flannel/\
-        62e44c867a2846fefb68bd5f178daf4da3095ccb/Documentation/kube-flannel.yml"
-    canal_manifest_uri: https://docs.projectcalico.org/v3.8/manifests/canal.yaml
+        v0.13.0/Documentation/kube-flannel.yml"
+    canal_manifest_uri: https://docs.projectcalico.org/v3.17/manifests/canal.yaml
     k8s_network_config:
       calico:
-        pod_network_cidr: '192.168.0.0/16'
+        pod_network_cidr: '172.16.0.0/16'
         manifest_uri: "{{ calico_manifest_uri }}"
       flannel:
         pod_network_cidr: '10.244.0.0/16'
